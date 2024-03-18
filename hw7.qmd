@@ -1,0 +1,135 @@
+---
+title: "HW7"
+format: pdf
+editor: visual
+---
+
+Homework7
+
+## 
+
+1.How can you check for missing values (NA) in the **`fert_cons_data`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** dataset? Please provide the R code and give a brief explanation of what is happening in the code.
+
+```{r missing, warning=FALSE}
+library(WDI)
+library(tidyr)
+library(dplyr)
+# Gather fertilizer consumption data from WDI
+fert_cons_data <- WDI(indicator = "AG.CON.FERT.ZS")
+missing_values <- is.na(fert_cons_data)
+missing_count <- colSums(missing_values)
+print(missing_count)
+# This function returns a logical matrix with the same dimensions as fert_cons_data, where each element is TRUE if the corresponding element in fert_cons_data is NA, and FALSE otherwise.
+```
+
+2.  What is the purpose of reshaping the **`fert_cons_data`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** dataset into a wide format?
+
+    The purposes of reshaping may include simplify visualization, summary statistics, comparative analysis, modeling, and data export, but the decision to reshape format should be based on the specific analytical needs.
+
+    ```{r reshaping}
+    # Reshape fert_cons_data to year wide-format
+    fert_wide <- tidyr::pivot_wider(fert_cons_data,
+    names_from = year,values_from = AG.CON.FERT.ZS)
+    ```
+
+3.  How can you rename the columns **`Year`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** and **`Fert`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** in the **`fert_long`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** dataset? Please provide the R code and give a brief explanation of what is happening in the code.
+
+    ```{r}
+    # gather a fert_long dataset
+    fert_long <- tidyr::pivot_longer(fert_wide, cols = `2016`:`2010`, names_to = "Year", values_to = "Fert")
+    # to rename year and fert_cons columns 
+    fert_long <- dplyr::rename(fert_long, 
+                              year = Year, 
+                              fert_cons = Fert)
+    head(fert_long)
+    # have the fert_long_sub dataset by drop outliers
+    fert_long_sub <- subset(x = fert_long, fert_cons <= 1000)
+    ```
+
+4.  What function is used to create a density plot of the **`fert_cons`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** variable in the **`fert_long`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** dataset? Please provide the R code and give a brief explanation of what is happening in the code.
+
+    ```{r plot}
+    library(ggplot2)
+    # Create density plot
+    ggplot(data = fert_long_sub, aes(fert_cons)) +
+      geom_density() + 
+      xlab("Fertilizer Consumption") + 
+      ylab("Density") +
+      theme_bw()
+    ```
+
+5.  How can you recode the country name "Korea, Rep." to "South Korea" in the **`fert_long_sub`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** dataset? Please provide the R code and give a brief explanation of what is happening in the code.
+
+    ```{r}
+    # Recode country == "Korea, Rep." to "South Korea"
+    fert_long_sub$country[fert_long_sub$country ==
+    "Korea, Rep."] <- "South Korea" 
+    head(fert_long_sub)
+    ```
+
+6.  How is the **`fert_cons_log`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** variable created in the **`fert_long_sub`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** dataset? Please provide the R code and give a brief explanation of what is happening in the code.
+
+    ```{r}
+    #make a new variable based on the old variable 
+    fert_long_sub$fert_cons_log <- log(fert_long_sub$fert_cons)
+    summary(fert_long_sub$fert_cons_log)
+    ```
+
+7.  What is the purpose of creating the **`fert_cons_group`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** variable in the **`fert_long_sub`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** dataset?
+
+    ```{r}
+    # The purpose is to create numeric factor levels variable
+    # Attach fert_long_sub data frame
+    attach(fert_long_sub)
+    # Created new fert_cons_group variable based on # fert_cons
+    fert_long_sub$fert_cons_group[fert_cons < 18] <- 1
+    fert_long_sub$fert_cons_group[fert_cons >= 18 & fert_cons < 81] <- 2
+    fert_long_sub$fert_cons_group[fert_cons >= 81 & fert_cons < 158] <- 3
+    fert_long_sub$fert_cons_group[fert_cons >= 158] <- 4
+    fert_long_sub$fert_cons_group[is.na(fert_cons)] <- NA
+    # Detach data frame
+    detach(fert_long_sub)
+    summary(fert_long_sub$fert_cons_group)
+    ```
+
+8.  How can you convert the **`fert_cons_group`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** variable into a factor variable with labels "low", "medium low", "medium high", and "high"? Please provide the R code and give a brief explanation of what is happening in the code.
+
+    ```{r}
+    # Create vector of factor level labels
+    fc_labels <- c("low", "medium low", "medium high", "high")
+    # Convert fert_cons_group to a factor
+    fert_long_sub$fert_cons_group <- factor(fert_long_sub$fert_cons_group, labels = fc_labels)
+    ```
+
+9.  What is the purpose of using the **`countrycode`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** package in the **`iso2c`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** variable creation?\
+    The **`countrycode`** package in R is used to convert country names or codes into ISO 3166-1 alpha-2 country codes, providing consistency and compatibility for data analysis across different datasets or systems.
+
+10. How can you merge the **`fin_regulator`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}**, **`disprop_data`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}**, and **`fert_long_sub`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** datasets based on the **`iso2c`{style="font-family: arial, helvetica, sans-serif; text-shadow: none !important; letter-spacing: normal !important; margin: 0px; padding: 0px; border: 0px; outline: 0px; font-weight: inherit; font-style: inherit; font-size: 13.3333px;"}** variable? Please provide the R code and give a brief explanation of what is happening in the code.
+
+    ```{r}
+    library(rio)
+    # Place the URL into the object fin_url
+    fin_url <- "https://bit.ly/2xlQ2j5"
+    # Download data
+    fin_regulator <- import(fin_url, format = "csv")
+    # load countrycode 
+    library(countrycode)
+    fin_regulator$iso2c <- countrycode(fin_regulator$country,
+    origin = "country.name", destination = "iso2c")
+    head(fin_regulator)
+
+    # Place shortened URLinto url object
+    url <- "http://bit.ly/14aSjxB"
+    # Download data
+    disprop_data <- rio::import(url, format = "csv")
+    # Show variable names
+    names(disprop_data)
+
+    # Merge fin_regulator and disprop_data
+    merged_data_2 <- merge(fin_regulator, disprop_data, union("iso2c", "year"), all = TRUE)
+    # Merge combined data frame with fert_long_sub
+    merged_data_2 <- merge(merged_data_2, fert_long_sub, union("iso2c", "year"), all = TRUE)
+    names(merged_data_2)
+    ```
+
+The link to Github repository: https://github.com/weiziwu/Week_7_HW.git
